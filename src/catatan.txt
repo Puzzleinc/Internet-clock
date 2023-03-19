@@ -1,0 +1,17 @@
+char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+
+
+  // timeClient.update();
+  // Serial.print(daysOfTheWeek[timeClient.getDay()]);
+  // Serial.print(", ");
+  // Serial.print(timeClient.getEpochTime());
+  // Serial.println(",");
+  // Serial.print(timeClient.getHours());
+  // Serial.print(":");
+  // Serial.print(timeClient.getMinutes());
+  // Serial.print(":");
+  // Serial.println(timeClient.getSeconds());
+  //Serial.println(timeClient.getFormattedTime());
+
+  // delay(1000);
+  // Serial.println(currentTime);
