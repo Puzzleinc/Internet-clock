@@ -12,6 +12,7 @@ const char* deviceName;
 
 // Initialize Internal led build in
 uint8_t connled = 2;
+uint8_t saklar = 13;
 
 // Iniotialize NTP Class
 WiFiUDP ntpUDP;
@@ -26,24 +27,44 @@ WiFiUDP ntpUDP;
 // NTPClient timeClient(ntpUDP, "pool.ntp.org", 25200, 60000); // Menambahkan variabel langsung pada fungsi
 NTPClient timeClient(ntpUDP, "pool.ntp.org");
 
-char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-
+// Setel waktu alarm ( 2 waktu sekaligus )
+uint8_t jamTimer[2][2] = {{9, 11},{17, 20}};   
 
 // Clock variable
 unsigned long timeLast = 0;
 unsigned long previousMillis = 0;
 unsigned long intervalDays = 2*24*60*60*1000; // 2 Days interval
-unsigned long intervalSec = 2; // 2 Days interval
+uint8_t intervalSec = 2; // 2 Days interval
 
 // set your starting hour here, not below at int hour. This ensures accurate daily correction of time
 
 uint8_t seconds;
 uint8_t minutes;
 uint8_t hours;
-uint8_t days;
+uint16_t days;
 
-void updateTime(uint8_t seconds, uint8_t minutes, uint8_t hours, uint8_t days);
-void showTime(uint8_t seconds, uint8_t minutes, uint8_t hours, uint8_t days);
+void updateTime(uint8_t seconds, uint8_t minutes, uint8_t hours, uint16_t days) {
+  // update waktu ke server NTP
+  timeClient.update();
+  seconds = timeClient.getSeconds();
+  minutes = timeClient.getMinutes();
+  hours = timeClient.getHours();
+}
+
+void showTime(uint8_t seconds, uint8_t minutes, uint8_t hours, uint16_t days) {
+  // tampilkan waktu saat ini ke serial monitor
+  timeClient.update();
+  Serial.print("Waktu internal: ");
+  Serial.print(days);
+  Serial.print(":");
+  Serial.print(hours);
+  Serial.print(":");
+  Serial.print(minutes);
+  Serial.print(":");
+  Serial.println(seconds);
+  Serial.print(" -- ");
+  Serial.println("Waktu internet : " + timeClient.getFormattedTime());
+}
 
 void setup() {
  /*  Common cathode led RGB */
@@ -51,6 +72,7 @@ void setup() {
 
   //  Initialize IO pin -----------------------
   pinMode(connled, OUTPUT);
+  pinMode(saklar, OUTPUT);
 
   //  Connecting to wifi -----------------------
   ssid = "Puzzle24";  // Enter SSID here
@@ -65,6 +87,7 @@ void setup() {
   timeClient.setTimeOffset(25200);
   timeClient.setUpdateInterval(180000);
 
+  // Dapatkan waktu pertama kali dari NTP Server
   timeClient.update();
   seconds = timeClient.getSeconds();
   minutes = timeClient.getMinutes();
@@ -102,58 +125,24 @@ void loop() {
     seconds = timeClient.getSeconds();
   }
 
+  // Function for sync internal clock with NTP server
   if (currentMillis - timeLast >= intervalDays) {
-    // save the last time you ran the function
     timeLast = currentMillis;
-
-    // call the function
     updateTime(seconds, minutes, hours, days);
   }
 
+  // Function to show current time to serial print every x second
   if (currentMillis - timeLast >= intervalSec) {
-    // save the last time you ran the function
     timeLast = currentMillis;
-
-    // call the function
     showTime(seconds, minutes, hours, days);
   }
 
-  // timeClient.update();
-
-  // Serial.print(daysOfTheWeek[timeClient.getDay()]);
-  // Serial.print(", ");
-  // Serial.print(timeClient.getEpochTime());
-  // Serial.println(",");
-  // Serial.print(timeClient.getHours());
-  // Serial.print(":");
-  // Serial.print(timeClient.getMinutes());
-  // Serial.print(":");
-  // Serial.println(timeClient.getSeconds());
-  //Serial.println(timeClient.getFormattedTime());
-
-  // delay(1000);
-  // Serial.println(currentTime);
-}
-
-void updateTime(uint8_t seconds, uint8_t minutes, uint8_t hours, uint8_t days) {
-  // your code here
-  timeClient.update();
-  seconds = timeClient.getSeconds();
-  minutes = timeClient.getMinutes();
-  hours = timeClient.getHours();
-}
-
-void showTime(uint8_t seconds, uint8_t minutes, uint8_t hours, uint8_t days) {
-  // your code here
-  timeClient.update();
-  Serial.print("Waktu internal: ");
-  Serial.print(days);
-  Serial.print(":");
-  Serial.print(hours);
-  Serial.print(":");
-  Serial.print(minutes);
-  Serial.print(":");
-  Serial.println(seconds);
-  Serial.print(" -- ");
-  Serial.println("Waktu internet : " + timeClient.getFormattedTime());
+  for (int i=0; i<2; i++) {
+    if(hours >= jamTimer[i][0] && hours <= jamTimer[i][1]-1) {
+      // Serial.println("Alarm aktif");
+        digitalWrite(saklar, HIGH);
+      } else {
+        digitalWrite(saklar, LOW);
+    }
+  }
 }
