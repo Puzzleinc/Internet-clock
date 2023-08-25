@@ -32,10 +32,11 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org");
 uint8_t jamTimer[][2] = {{9, 11},{17, 20}};   
 
 // Clock variable
-unsigned long timeLast = 0;
-unsigned long previousMillis = 0;
-unsigned long intervalDays = 2*24*60*60*1000; // 2 Days interval
-uint8_t intervalSec = 2; // 2 Days interval
+unsigned long showtimeTemp; // Temporary time for show second on print
+unsigned long previousMillis; // Temporary time update clock conter
+unsigned long updatetimeTemp; // Temporary time for updating saved time
+unsigned long intervalUpdate = 12*60*60; // millis converted to second
+uint8_t intervalSec = 2; 
 
 // set your starting hour here, not below at int hour. This ensures accurate daily correction of time
 uint8_t seconds;
@@ -45,20 +46,22 @@ uint16_t days;
 
 void updateTime(unsigned long currentMillis) {
   // update waktu ke server NTP
-  if (currentMillis - timeLast >= intervalDays) {
-    timeLast = currentMillis;
-    
+  if (currentMillis - updatetimeTemp >= intervalUpdate) {
+    updatetimeTemp = currentMillis;
+
+    timeClient.begin();
     timeClient.update();
     seconds = timeClient.getSeconds();
     minutes = timeClient.getMinutes();
     hours = timeClient.getHours();
+    Serial.print("Time has been updated");
   }
 }
 
 void showTime(unsigned long currentMillis) {
   // tampilkan waktu saat ini ke serial monitor
-  if (currentMillis - timeLast >= intervalSec) {
-    timeLast = currentMillis;
+  if (currentMillis - showtimeTemp >= intervalSec) {
+    showtimeTemp = currentMillis;
     
     // timeClient.update();
     // Serial.print("Waktu internal: ");
@@ -72,10 +75,18 @@ void showTime(unsigned long currentMillis) {
     // Serial.print(" -- ");
     // Serial.println("Waktu internet : " + timeClient.getFormattedTime());
 
+    Serial.print(seconds);
+    Serial.print(minutes);
+    Serial.println(hours);
+    // Serial.print("=");
+    // Serial.print(currentMillis);
+    // Serial.print("=");
+    // Serial.println(timeLast);s
+    
     // Led berkedip setiap detik
-    digitalWrite(secLed, HIGH);
+    digitalWrite(connled, HIGH);
     delay(50);
-    digitalWrite(secLed, LOW);
+    digitalWrite(connled, LOW);
     delay(50);
   }
 }
@@ -134,7 +145,7 @@ void setup() {
   timeClient.begin();
   // Tambahan fungsi
   timeClient.setTimeOffset(25200);
-  timeClient.setUpdateInterval(180000);
+  timeClient.setUpdateInterval(10000);
 
   // Dapatkan waktu pertama kali dari NTP Server
   timeClient.update();
