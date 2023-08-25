@@ -78,10 +78,6 @@ void showTime(unsigned long currentMillis) {
     Serial.print(seconds);
     Serial.print(minutes);
     Serial.println(hours);
-    // Serial.print("=");
-    // Serial.print(currentMillis);
-    // Serial.print("=");
-    // Serial.println(timeLast);s
     
     // Led berkedip setiap detik
     digitalWrite(connled, HIGH);
