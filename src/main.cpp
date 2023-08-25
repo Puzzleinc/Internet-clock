@@ -13,6 +13,7 @@ const char* deviceName;
 // Initialize Internal led build in
 uint8_t connled = 2;
 uint8_t saklar = 13;
+uint8_t secLed = 12;
 
 // Iniotialize NTP Class
 WiFiUDP ntpUDP;
@@ -28,7 +29,7 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org");
 
 // Setel waktu alarm ( 2 waktu sekaligus )
-uint8_t jamTimer[2][2] = {{9, 11},{17, 20}};   
+uint8_t jamTimer[][2] = {{9, 11},{17, 20}};   
 
 // Clock variable
 unsigned long timeLast = 0;
@@ -59,33 +60,38 @@ void showTime(unsigned long currentMillis) {
   if (currentMillis - timeLast >= intervalSec) {
     timeLast = currentMillis;
     
-    timeClient.update();
-    Serial.print("Waktu internal: ");
-    Serial.print(days);
-    Serial.print(":");
-    Serial.print(hours);
-    Serial.print(":");
-    Serial.print(minutes);
-    Serial.print(":");
-    Serial.println(seconds);
-    Serial.print(" -- ");
-    Serial.println("Waktu internet : " + timeClient.getFormattedTime());
+    // timeClient.update();
+    // Serial.print("Waktu internal: ");
+    // Serial.print(days);
+    // Serial.print(":");
+    // Serial.print(hours);
+    // Serial.print(":");
+    // Serial.print(minutes);
+    // Serial.print(":");
+    // Serial.println(seconds);
+    // Serial.print(" -- ");
+    // Serial.println("Waktu internet : " + timeClient.getFormattedTime());
+
+    // Led berkedip setiap detik
+    digitalWrite(secLed, HIGH);
+    delay(50);
+    digitalWrite(secLed, LOW);
+    delay(50);
   }
-  
 }
 
 void clockCounter(unsigned long currentMillis) {
   seconds = currentMillis - previousMillis;
 
   //the number of seconds that have passed since the last time 60 seconds was reached.
-  if (seconds == 60) {
+  if (seconds >= 60) {
     previousMillis = currentMillis;
     seconds = 0;
     minutes = minutes + 1; 
   }
 
   //if one minute has passed, start counting milliseconds from zero again and add one minute to the clock.
-  if (minutes == 60){
+  if (minutes >= 60){
     minutes = 0;
     hours = hours + 1; 
   }
@@ -115,6 +121,7 @@ void setup() {
   //  Initialize IO pin -----------------------
   pinMode(connled, OUTPUT);
   pinMode(saklar, OUTPUT);
+  pinMode(secLed, OUTPUT);
 
   //  Connecting to wifi -----------------------
   ssid = "Puzzle24";  // Enter SSID here
